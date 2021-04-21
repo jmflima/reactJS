@@ -1,13 +1,26 @@
 {
-    "lists": [
-        {
-            "name": "Estudo"
-        },
-        {
-            "name": "Trabalho"
-        },
-        {
-            "name": "Esporte"
-        }
-    ]
+  "lists": [
+    {
+      "id": "2021-04-20T20:27:04.106Z",
+      "name": "Diversão"
+    },
+    {
+      "id": "2021-04-21T09:49:35.183Z",
+      "name": "Trabalho"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "2021-04-21T08:37:27.045Z",
+      "list_id": "2021-04-20T20:27:04.106Z",
+      "name": "testando",
+      "status": "feito"
+    },
+    {
+      "id": "2021-04-21T08:39:18.412Z",
+      "list_id": "2021-04-20T20:27:04.106Z",
+      "name": "testando novamente",
+      "status": "pendente"
+    }
+  ]
 }

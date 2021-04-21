@@ -1,29 +1,66 @@
 import { useEffect, useState } from "react";
 import { FaRegCheckSquare, FaRegSquare } from "react-icons/fa";
-import { useParams } from "react-router";
+import { useParams, useLocation } from "react-router";
+import axios from "axios";
+import { Form, Input, Button, Row, Col, Divider } from "antd";
+
+const endpoint = "http://localhost:3004";
 
 const Tasks = () => {
 
     const params = useParams();
+    const location = useLocation();
     const [list, setList] = useState([]);
-    const [listFilter, setListFilter] = useState([]);
+    const [lista, setLista] = useState([]);
     const [isOnlyPending, setIsOnlyPending]= useState([]);
     const [isEditando, setIsEditando] = useState("");
-  
+
+    async function getTasks(id) {
+        const res = await axios.get(`${endpoint}/tasks?list_id=${id}`);
+        if ( res.status === 200 ) {
+            setList(res.data);
+        }
+    }
+
+    //lista a terfa mãe
+    async function getList(id) {
+        const res = await axios.get(`${endpoint}/lists/${id}`);
+        if ( res.status === 200 ) {
+            setLista(res.data);
+        }
+    }
+
     useEffect(() => {
         console.log(params);
-    }, [params])
+        if (params.id) {
+            getTasks(params.id);
+            getList(params.id);
+        }
+    }, [location])
 
     return (
         <div className="App">
-            <form onSubmit={onSubmit}>
-            <input name="task" id="tarefas" />
-            <button type="submit">Adicionar</button>
-            </form>
+
+            <h1>{lista && lista.name}</h1>
+            <Divider />
+
+            <Form onFinish={onSubmit}>
+                <Row>
+                    <Col sm={20}>
+                        <Form.Item name="task">
+                            <Input name="task" id="tarefa" />
+                        </Form.Item>
+                    </Col>
+                    <Col sm={4}>
+                        <Button htmlType="submit">Adicionar</Button>
+                    </Col>
+                </Row>
+            </Form>
 
             <div>
-            <a href="#" onClick={filter}>
-                {isOnlyPending ? "Todos" : "Pendentes"} </a>
+            <Button type="link" onClick={filter}>
+                {isOnlyPending ? "Todos" : "Pendentes"} 
+            </Button>
             </div>
 
             <ul>
@@ -50,33 +87,36 @@ const Tasks = () => {
         </div>
     );
 
-    function onSubmit(e) {
-        e.preventDefault();
-        console.log(e.target.task.value);
+    // criando sub tarefas no banco de dados
+    async function onSubmit(values) {
+        console.log(values.task);
         const task = {
           id: new Date(),
-          name: e.target.task.value,
+          list_id: params.id,
+          name: values.task,
           status: "pendente",
         };
-        setList([...list, task]);
-        setListFilter([...list, task]);
-        document.getElementById("tarefas").value = "";
+
+        await axios.post(`${endpoint}/tasks`, task);
+        getTasks(params.id);    //mostra a lista novamente
     }
     
-    function toggle(item) {
-        const statusToUpdate = item.status === "pendente" ? "feito" : "pendente";
-        const newList = list.map((t) => {
-            if (t.id === item.id) t.status = statusToUpdate;
-            return t;
-        });
-    setList(newList);
+    //alterando status da subtarefa
+    async function toggle(item) {
+        item.status = item.status === "pendente" ? "feito" : "pendente";
+        await axios.put(`${endpoint}/tasks/${item.id}`, item)
+        getTasks(params.id);
+
     }
     
-    function filter(){
-        const listToFilter = listFilter.filter(item => {
-            return !isOnlyPending ? item.status === "pendente" : true;
-        })
-        setList(listToFilter);
+    async function filter(){
+        let url = `${endpoint}/tasks`;
+        if (!isOnlyPending) {
+            url = url + `?status=pendente`;
+        }
+
+        const res = await axios.get(url);
+        if (res.status === 200) setList(res.data);
         setIsOnlyPending(!isOnlyPending);
     }
     
